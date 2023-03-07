@@ -1,0 +1,86 @@
+---
+title: "Analyse du questionnaire de bienvenue dans le thème indicateur"
+author: "Romain Lorrilliere"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,message = FALSE,warning = FALSE,error = FALSE)
+```
+
+```{r library}
+library(readxl) # pour importer les données au format xlsx
+library(tm) # pour le text mining
+library(SnowballC) # pour le text stemming
+library(wordcloud) # générateur de word-cloud 
+library(RColorBrewer) # Palettes de couleurs
+library(data.table)
+library(ggplot2)
+```
+
+```{r source}
+# http://www.sthda.com/french/wiki/text-mining-et-nuage-de-mots-avec-le-logiciel-r-5-etapes-simples-a-savoir
+
+```
+
+```{r data}
+ d <- read_xlsx("../data/le_theme_indicateur_du_cesco.xlsx", sheet = "Sheet1",skip = 2)
+d <- d[,c(1,10:15)]
+colnames(d) <- c("id","cat","def","pratique","sujet","attente","meeting")
+setDT(d)
+
+def_participant <- d[cat %in% c("Participant.e","Animateurice"),def]
+def_sympatisant <- d[cat == "Sympathisant.e",def]
+
+pratique_participant <- d[cat %in% c("Participant.e","Animateurice"),pratique]
+pratique_sympatisant <- d[cat == "Sympathisant.e",pratique]
+
+sujet_participant <- d[cat %in% c("Participant.e","Animateurice"),sujet]
+sujet_sympatisant <- d[cat == "Sympathisant.e",sujet]
+
+attente_participant <- d[cat %in% c("Participant.e","Animateurice"),attente]
+attent_sympatisant <- d[cat == "Sympathisant.e",attente]
+
+djs <-read_xlsx("../data/theme_indicateur_annuaire.xlsx",sheet="Feuil1")
+setDT(djs)
+```
+
+
+```{r cat} 
+gg_js <- djs[,.(nombre = .N),by = cat]
+gg_js[,source := "journées scientifiques"]
+
+gg_cat <- d[,.(nombre = .N),by=cat]
+gg_cat[,source := "formulaire"]
+
+gg_cat <- rbind(gg_cat,gg_js)
+
+gg <- ggplot(gg_cat,aes(x=source,y=nombre,fill=cat)) + geom_bar(stat="identity") #+ facet_wrap(.~source)
+gg
+
+
+```
+
+```{r participant} 
+
+p_sc <- sum(gg_cat[source== "journées scientifiques" & cat %in% c("Participant.e","Animateurice"), nombre])
+p_f <- sum(gg_cat[source== "formulaire" & cat %in% c("Participant.e","Animateurice"), nombre])
+
+cat("participant lors de la journée du labo :", p_sc,"\n")
+cat("participant dans le formulaire :", p_f,"\n")
+cat(round((p_sc - p_f) / p_sc *100),"%\n")
+
+```
+
+
+
+
+```{r meeting}
+gg <- ggplot(d,aes(x=ifelse(cat == "Sympathisant.e","Sympathisant.e","Participant.e"),fill=meeting)) + geom_bar() 
+gg <- gg + labs(y="Effectif",x="",fill="")
+gg
+
+```
+
+
