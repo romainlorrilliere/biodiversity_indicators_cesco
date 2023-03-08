@@ -21,7 +21,7 @@ library(ggplot2)
 
 ```{r source}
 # http://www.sthda.com/french/wiki/text-mining-et-nuage-de-mots-avec-le-logiciel-r-5-etapes-simples-a-savoir
-
+source("../functions/fun_wordcloud.r")
 ```
 
 ```{r data}
@@ -30,21 +30,32 @@ d <- d[,c(1,10:15)]
 colnames(d) <- c("id","cat","def","pratique","sujet","attente","meeting")
 setDT(d)
 
-def_participant <- d[cat %in% c("Participant.e","Animateurice"),def]
-def_sympatisant <- d[cat == "Sympathisant.e",def]
+d_def <- read_xlsx("../data/le_theme_indicateur_du_cesco.xlsx", sheet = "Def",)
+setDT(d_def)
+def_participant <- d_def[cat %in% c("Participant.e","Animateurice"),key_word]
+def_sympatisant <- d_def[cat == "Sympathisant.e",key_word]
 
-pratique_participant <- d[cat %in% c("Participant.e","Animateurice"),pratique]
-pratique_sympatisant <- d[cat == "Sympathisant.e",pratique]
+d_pra <- read_xlsx("../data/le_theme_indicateur_du_cesco.xlsx", sheet = "Pratique",)
+setDT(d_pra)
+pratique_participant <- d_pra[cat %in% c("Participant.e","Animateurice"),key_word]
+pratique_sympatisant <- d_pra[cat == "Sympathisant.e",key_word]
 
-sujet_participant <- d[cat %in% c("Participant.e","Animateurice"),sujet]
-sujet_sympatisant <- d[cat == "Sympathisant.e",sujet]
+d_suj <- read_xlsx("../data/le_theme_indicateur_du_cesco.xlsx", sheet = "Sujet",)
+setDT(d_suj)
+sujet_participant <- d_suj[cat %in% c("Participant.e","Animateurice"),key_word]
+sujet_sympatisant <- d_suj[cat == "Sympathisant.e",key_word]
 
-attente_participant <- d[cat %in% c("Participant.e","Animateurice"),attente]
-attent_sympatisant <- d[cat == "Sympathisant.e",attente]
+d_att <- read_xlsx("../data/le_theme_indicateur_du_cesco.xlsx", sheet = "Attente",)
+setDT(d_att)
+attente_participant <- d_att[cat %in% c("Participant.e","Animateurice"),key_word]
+attente_sympatisant <- d_att[cat == "Sympathisant.e",key_word]
 
 djs <-read_xlsx("../data/theme_indicateur_annuaire.xlsx",sheet="Feuil1")
 setDT(djs)
 ```
+
+
+# Les participants au thème
 
 
 ```{r cat} 
@@ -58,9 +69,21 @@ gg_cat <- rbind(gg_cat,gg_js)
 
 gg <- ggplot(gg_cat,aes(x=source,y=nombre,fill=cat)) + geom_bar(stat="identity") #+ facet_wrap(.~source)
 gg
+ggsave("output/participation_questionnaire.png",gg)
+
+```
+
+```{r participant_total} 
+
+pt_sc <- sum(gg_cat[source== "journées scientifiques" , nombre])
+pt_f <- sum(gg_cat[source== "formulaire", nombre])
+
+cat("Intéressé.e.s lors de la journée du labo :", pt_sc,"\n")
+cat("Nombre de formulaire :", pt_f,"\n")
 
 
 ```
+
 
 ```{r participant} 
 
@@ -76,11 +99,174 @@ cat(round((p_sc - p_f) / p_sc *100),"%\n")
 
 
 
+# La définition des indicateurs de biodiversité
+
+## Tout le monde
+
+
+```{r def_all}
+source("../functions/fun_wordcloud.r")
+##tcorrectif <- fread("../library/correctifs.csv",encoding = "Latin-1")
+file_name = paste0("output/def_all.png")
+w_def <- f_wordcloud_simple(c(def_sympatisant, def_participant),file_name)
+setDT(w_def)
+print(w_def)
+``` 
+
+
+## Les participants
+
+```{r def_participant}
+file_name = paste0("output/def_participant.png")
+w_def_participant <- f_wordcloud_simple(def_participant,file_name)
+setDT(w_def_participant)
+print(w_def_participant)
+```   
+
+
+## Les sympatisants
+
+```{r def_sympatisant}
+file_name = paste0("output/def_sympatisant.png")
+w_def_sympatisant <- f_wordcloud_simple(def_sympatisant,file_name)
+setDT(w_def_sympatisant)
+print(w_def_sympatisant)
+
+
+``` 
+
+
+
+
+# La pratique des indicateurs au CESCO
+
+## Tout le monde
+
+
+```{r pratique_all}
+source("../functions/fun_wordcloud.r")
+#tcorrectif <- fread("../library/correctifs.csv",encoding = "Latin-1")
+file_name = paste0("output/pratique_all.png")
+w_pratique <- f_wordcloud_simple(c(pratique_sympatisant, pratique_participant),file_name)
+setDT(w_pratique)
+print(w_pratique)
+``` 
+
+
+## Les participants
+
+```{r pratique_participant}
+file_name = paste0("output/pratique_participant.png")
+w_pratique_participant <- f_wordcloud_simple(pratique_participant,file_name)
+setDT(w_pratique_participant)
+print(w_pratique_participant)
+```   
+
+
+## Les sympatisants
+
+```{r pratique_sympatisant}
+file_name = paste0("output/pratique_sympatisant.png")
+w_pratique_sympatisant <- f_wordcloud_simple(pratique_sympatisant,file_name)
+setDT(w_pratique_sympatisant)
+print(w_pratique_sympatisant)
+
+
+``` 
+
+
+
+
+
+
+
+
+# Les objets d'étude sur les quels nous utilisons des indicateurs au CESCO
+
+## Tout le monde
+
+
+```{r sujet_all}
+source("../functions/fun_wordcloud.r")
+#tcorrectif <- fread("../library/correctifs.csv",encoding = "Latin-1")
+file_name = paste0("output/sujet_all.png")
+w_sujet <- f_wordcloud_simple(c(sujet_sympatisant, sujet_participant),file_name)
+setDT(w_sujet)
+print(w_sujet)
+``` 
+
+
+## Les participants
+
+```{r sujet_participant}
+file_name = paste0("output/sujet_participant.png")
+w_sujet_participant <- f_wordcloud_simple(sujet_participant,file_name)
+setDT(w_sujet_participant)
+print(w_sujet_participant)
+```   
+
+
+## Les sympatisants
+
+```{r sujet_sympatisant}
+file_name = paste0("output/sujet_sympatisant.png")
+w_sujet_sympatisant <- f_wordcloud_simple(sujet_sympatisant,file_name)
+setDT(w_sujet_sympatisant)
+print(w_sujet_sympatisant)
+
+
+``` 
+
+
+
+
+# Les attentes sur le thème indicateur
+
+## Tout le monde
+
+
+```{r attente_all}
+source("../functions/fun_wordcloud.r")
+#tcorrectif <- fread("../library/correctifs.csv",encoding = "Latin-1")
+file_name = paste0("output/attente_all.png")
+w_attente <- f_wordcloud_simple(c(attente_sympatisant, attente_participant),file_name)
+setDT(w_attente)
+print(w_attente)
+``` 
+
+
+## Les participants
+
+```{r attente_participant}
+file_name = paste0("output/attente_participant.png")
+w_attente_participant <- f_wordcloud_simple(attente_participant,file_name)
+setDT(w_attente_participant)
+print(w_attente_participant)
+```   
+
+
+## Les sympatisants
+
+```{r attente_sympatisant}
+file_name = paste0("output/attente_sympatisant.png")
+w_attente_sympatisant <- f_wordcloud_simple(attente_sympatisant,file_name)
+setDT(w_attente_sympatisant)
+print(w_attente_sympatisant)
+
+
+``` 
+
+
+
+
+
+
+
 ```{r meeting}
 gg <- ggplot(d,aes(x=ifelse(cat == "Sympathisant.e","Sympathisant.e","Participant.e"),fill=meeting)) + geom_bar() 
 gg <- gg + labs(y="Effectif",x="",fill="")
 gg
-
+ggsave("output/meeting.png",gg)
 ```
 
 
